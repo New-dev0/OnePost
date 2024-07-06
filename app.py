@@ -5,6 +5,7 @@ from pages.instagram import Instagram
 from pages.post_page import PostPage
 from pages.linkedin import LinkedIN
 from pages.chat_gpt import ChatGPTSettings
+from pages.twitter import Twitter
 
 
 class App:
@@ -19,18 +20,24 @@ class App:
         self._create = PostPage()
         self._linkedin = LinkedIN()
         self._chatgpt = ChatGPTSettings()
+        self._twitter = Twitter()
 
     def routes(self):
         data = {
             "create_post": {
                 "title": "Create Post",
                 "callback": self._create.page,
-                "image": "assets/create_post.png",
+                "image": "assets/quill.png",
             },
             "instagram": {
                 "title": "Instagram",
                 "callback": self._instagram.page,
                 "image": "assets/instagram.png",
+            },
+            "twitter": {
+                "title": "X | Twitter",
+                "callback": self._twitter.page,
+                "image": "assets/x.png",
             },
             "linkedin": {
                 "title": "LinkedIn",
@@ -79,8 +86,8 @@ class App:
     def get_sidebar_content(self):
         items = []
         for page_id, data in self.routes().items():
-            if page_id in ["chatgpt"]:
-                continue
+            if page_id in ["chatgpt", "instagram"]:
+                items.append(ft.Divider())
             items.append(
                 ft.Container(
                     content=ft.ListTile(
@@ -99,10 +106,12 @@ class App:
             )
         return items
 
-
     async def send_message(self, text: str, files: List[str] = None):
-        for provider in [self._telegram, self._instagram, self._linkedin,
-                        ]:
+        for provider in [
+            self._telegram,
+            self._instagram,
+            self._linkedin,
+        ]:
             if hasattr(provider, "send_message"):
                 await provider.send_message(text, files)
 
@@ -110,23 +119,6 @@ class App:
         return ft.Column(
             [
                 ft.Column(self.get_sidebar_content()),
-                ft.Divider(),  
-                ft.Container(  
-                    content=ft.ListTile(
-                        title=ft.Text("ChatGPT"),
-                        on_click=self.routes()["chatgpt"]["on_click"],
-                        leading=ft.Image(
-                            self.routes()["chatgpt"]["image"], width=30, height=30
-                        ),
-                        
-                    ),
-                    bgcolor=(  
-                        ft.colors.WHITE10
-                        if "chatgpt" == self.page
-                        else ft.colors.TRANSPARENT
-                    )
-                    
-                ),
             ],
             #            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
@@ -160,7 +152,7 @@ class App:
             ft.Row(
                 [
                     ft.Column(
-                        [self._drawer], 
+                        [self._drawer],
                         #       expand=True,
                         # expand_loose=True
                     ),

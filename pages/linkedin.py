@@ -107,6 +107,29 @@ class LinkedIN:
             self._client = Client(self._username, self._password, cookies=cookies)
         return self._client
 
+    async def send_message(self, text: str, files=None):
+        client = self.client()
+        jsonData = {
+            "variables": {
+                "post": {
+                    "allowedCommentersScope": "ALL",
+                    "intendedShareLifeCycleState": "PUBLISHED",
+                    "origin": "FEED",
+                    "visibilityDataUnion": {"visibilityType": "ANYONE"},
+                    "commentary": {"text": text, "attributesV2": []},
+                }
+            },
+            "queryId": "voyagerContentcreationDashShares.5c3a8a34a002f744ca0dc6a295a1569c",
+            "includeWebMetadata": True,
+        }
+        res = client._post(
+            "/voyager/api/graphql?action=execute&queryId=voyagerContentcreationDashShares.5c3a8a34a002f744ca0dc6a295a1569c",
+            data=json.dumps(jsonData),
+        )
+        print(res)
+        print(res.text)
+
+
     async def after_login(self):
         me = self.client().get_user_profile()
         prof = me["miniProfile"]
@@ -122,14 +145,8 @@ class LinkedIN:
                             weight=ft.FontWeight.BOLD,
                         ),
                         ft.Container(height=20),
-                        ft.Image(
-                            "assets/linkedin.png",
-                            height=200,
-                            width=200
-                        ),
-                        ft.Text(name,
-                                text_align=ft.TextAlign.CENTER
-                                ),
+                        ft.Image("assets/linkedin.png", height=200, width=200),
+                        ft.Text(name, text_align=ft.TextAlign.CENTER),
                     ]
                 )
             ],
