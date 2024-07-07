@@ -135,6 +135,24 @@ class Twitter:
             return self.login_page(page)
         return self.after_login(page)
 
+    async def send_message(self, text: str, files=None):
+        for account in self.accounts().values():
+            path = account["path"]
+            client = Client()
+            client.load_cookies(path)
+
+            mediaIds = []
+            for file in files or []:
+                mediaId = await client.upload_media(
+                    file, wait_for_completion=True, media_type="image/jpeg"
+                )
+                mediaIds.append(mediaId)
+
+            try:
+                await client.create_tweet(text, media_ids=mediaIds)
+            except Exception as er:
+                print(er)
+
     def after_login(self, page: ft.Page):
 
         async def addAccount(ev):

@@ -65,6 +65,10 @@ class LinkedIN:
             page.show_dialog(dialog)
             return
 
+        self._settings_path = settings_path = os.path.join(
+            "sessions", f"{self._username}.json"
+        )
+
         try:
             self.client()
         except Exception as er:
@@ -128,7 +132,6 @@ class LinkedIN:
         )
         print(res)
         print(res.text)
-
 
     async def after_login(self):
         me = self.client().get_user_profile()

@@ -134,3 +134,17 @@ class Instagram:
         ]
 
         return ft.Column(items)
+
+    def client(self):
+        if not self._client:
+            self._client = Client()
+            self._client.load_settings(self._settings_path)
+        return self._client
+
+    async def send_message(self, text, files=None):
+        if not files:
+            return
+        
+        client = self.client()
+        for file in files or []:
+            client.photo_upload(path=file, caption=text)

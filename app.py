@@ -1,5 +1,7 @@
 import flet as ft
 from typing import List
+from logging import getLogger
+
 from pages.telegram import Telegram
 from pages.instagram import Instagram
 from pages.post_page import PostPage
@@ -14,6 +16,7 @@ class App:
         self.current_page_obj = None
         self.parent = None
         self._drawer = None
+        self._logger = getLogger("app")
 
         self._telegram = Telegram()
         self._instagram = Instagram()
@@ -109,11 +112,15 @@ class App:
     async def send_message(self, text: str, files: List[str] = None):
         for provider in [
             self._telegram,
-            self._instagram,
+            #            self._instagram,
             self._linkedin,
+            self._twitter,
         ]:
             if hasattr(provider, "send_message"):
-                await provider.send_message(text, files)
+                try:
+                    await provider.send_message(text, files)
+                except Exception as er:
+                    self._logger.exception(er)
 
     def drawer_content(self):
         return ft.Column(

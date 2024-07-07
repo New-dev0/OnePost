@@ -15,7 +15,8 @@ class PostPage:
         self._text = value.data
 
     async def file_picker_result(self, result: ft.FilePickerResultEvent):
-        self._files.extend(result.files)
+        if result.files:
+            self._files.extend([z.path for z in result.files if z not in self._files])
         if self._page:
             self._parent.content = await self.page(self._page, self._parent, self._app)
             self._page.update()
@@ -25,17 +26,15 @@ class PostPage:
         page.overlay.append(picker)
         page.update()
         picker.pick_files()
-    
+
     async def click_send(self, ev: ControlEvent):
         if not (self._text or self._files):
             return
 
         from app import App
+
         app: App = self._app
-        await app.send_message(
-            self._text,
-            files=self._files or None
-        )
+        await app.send_message(self._text, files=self._files or None)
 
     async def page(self, page: ft.Page, parent: ft.Container, app):
         self._page = page
@@ -43,15 +42,42 @@ class PostPage:
         self._app = app
 
         items = []
+        rows = []
+
+        def onDelete(file):
+            async def onRemove(ev):
+                self._files.remove(file)
+                parent.content = await self.page(page, parent, app)
+                page.update()
+
+            return onRemove
+
         if self._files:
-            items.append(
-                ft.Row(
-                    [
-                        ft.Image(src=img.path, height=80, width=80, border_radius=10)
-                        for img in self._files
-                    ]
+            for img in self._files:
+                rows.append(
+                    ft.Column(
+                        [
+                            ft.Image(
+                                src=img,
+                                height=80,
+                                width=80,
+                                border_radius=10,
+                            ),
+                            ft.Row(
+                                [
+                                    ft.IconButton(
+                                        icon=ft.icons.DELETE,
+                                        icon_color=ft.colors.RED_400,
+                                        on_click=onDelete(img)
+                                    )
+                                ],
+#                                expand=True,
+                                alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                            ),
+                        ],
+                    )
                 )
-            )
+            items.append(ft.Row(rows))
 
         items.extend(
             [
@@ -62,7 +88,7 @@ class PostPage:
                     min_lines=10,
                     on_change=self.on_text_change,
                     multiline=True,
-                    value=self._text
+                    value=self._text,
                 ),
                 ft.Row(
                     [
@@ -70,8 +96,9 @@ class PostPage:
                             icon=ft.icons.ATTACH_FILE_ROUNDED,
                             on_click=lambda x: self.show_file_picker(page),
                         ),
-                        ft.FilledButton(text="Send now", icon="send",
-                                        on_click=self.click_send),
+                        ft.FilledButton(
+                            text="Send now", icon="send", on_click=self.click_send
+                        ),
                     ],
                     alignment=ft.MainAxisAlignment.END,
                 ),
